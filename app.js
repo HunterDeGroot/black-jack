@@ -11,7 +11,6 @@ let s = document.getElementById('pecentscore');
 
 const dealerScore = Number.parseInt(localStorage.getItem('dealerscore') || 0);
 const playerScore = Number.parseInt(localStorage.getItem('playerscore') || 0);
-console.log(playerScore / (dealerScore + playerScore))
 ds.innerText = 'Dealer: ' + dealerScore;
 ps.innerText = 'Player: ' + playerScore;
 
