@@ -52,7 +52,6 @@ const newDeck = function () {
             deck.push(card);
         }
     }
-    console.log(deck)
     deck.sort(function () {
         return Math.random() - .5;
     });

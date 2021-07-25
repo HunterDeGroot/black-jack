@@ -2,13 +2,15 @@ const playerBoard = document.getElementById('player-board');
 const dealerBoard = document.getElementById('bot-board');
 const deck = newDeck();
 const board = document.getElementById('board');
-let sums = [];
+let playerSums = [];
+let dealerSums = [];
 
-for (let i = 0; i < 2; i++) {
+function dealCard(isDealer, replacesFaceDown = false) {
     const c = deck.pop();
 
+    let sums = isDealer ? dealerSums : playerSums;
     if (sums.length === 0) sums[0] = 0;
-    for (let i = 0; i < sums.length;i++) {
+    for (let i = 0; i < sums.length; i++) {
         switch (c.number) {
             case 11:
                 sums[i] += 10;
@@ -28,106 +30,50 @@ for (let i = 0; i < 2; i++) {
         }
     }
 
-    if(c.number === 1) {
+    if (c.number === 1) {
         let newSums = [];
-        for (let i = 0; i < sums.length;i++) {
-            newSums.push(sums[i]+10);
+        for (let i = 0; i < sums.length; i++) {
+            newSums.push(sums[i] + 10);
         }
 
-        for(let i = 0; i < newSums.length; i++) {
+        for (let i = 0; i < newSums.length; i++) {
             sums.push(newSums[i]);
         }
     }
 
     const imgName = c.img;
-    console.log(imgName)
     const card = document.createElement('div');
-    // g.className='tclose'; g.v=0;
     card.setAttribute('class', 'col-2');
 
     const img = document.createElement('img');
     img.style.width = '100px';
     img.style.height = '200px';
     img.src = './JPEG/' + imgName;
-    // card.innerText = i;
+    card.append(img);
 
-    card.appendChild(img);
-    playerBoard.appendChild(card);
+    const row = isDealer ? dealerBoard : playerBoard;
+    if (replacesFaceDown) {
+        const faceDownCard = document.getElementById('face-down-card');
+        dealerBoard.replaceChild(card, faceDownCard);
+    } else {
+        row.append(card);
+    }
 }
-showSums()
+
+
+dealCard(false);
+dealCard(false);
+
 addFaceDownCard()
-for (let i = 0; i < 1; i++) {
-    const imgName = deck.pop().img;
-    console.log(imgName)
-    const card = document.createElement('div');
-    // g.className='tclose'; g.v=0;
-    card.setAttribute('class', 'col-2');
-
-    const img = document.createElement('img');
-    img.style.width = '100px';
-    img.style.height = '200px';
-    img.src = './JPEG/' + imgName;
-    // card.innerText = i;
-
-    card.appendChild(img);
-    dealerBoard.appendChild(card);
-}
+dealCard(true);
 
 let stayed = false;
 
 function hit() {
-    const c = deck.pop()
-
-    if (sums.length === 0) sums[0] = 0;
-    for (let i = 0; i < sums.length;i++) {
-        switch (c.number) {
-            case 11:
-                sums[i] += 10;
-                break;
-            case 12:
-                sums[i] += 10;
-                break;
-            case 13:
-                sums[i] += 10;
-                break;
-            case 1:
-                sums[i] += 1;
-                break;
-            default:
-                sums[i] += c.number;
-                break;
-        }
-    }
-
-    if(c.number === 1) {
-        let newSums = [];
-        for (let i = 0; i < sums.length;i++) {
-            newSums.push(sums[i]+10);
-        }
-
-        for(let i = 0; i < newSums.length; i++) {
-            sums.push(newSums[i]);
-        }
-    }
-
-    const imgName = c.img;
-    console.log(imgName)
-    const card = document.createElement('div');
-    // g.className='tclose'; g.v=0;
-    card.setAttribute('class', 'col-2');
-
-    const img = document.createElement('img');
-    img.style.width = '100px';
-    img.style.height = '200px';
-    img.src = './JPEG/' + imgName;
-    // card.innerText = i;
-
-    card.appendChild(img);
-    playerBoard.appendChild(card);
+    dealCard(false);
     const bust = checkBust()
-    showSums()
-    console.log(bust)
-    if(bust) setTimeout(function() { alert('Player Busted: Dealer Wins')}, 1000);
+    if (playerHas21) { hideHitStay(); caclulateDealersHand(); }
+    if (bust) setTimeout(function () { alert('Player Busted: Dealer Wins'); reset() }, 1000);
 }
 
 function addFaceDownCard() {
@@ -143,38 +89,23 @@ function addFaceDownCard() {
 }
 
 function replaceFaceDownCard() {
-    const imgName = deck.pop().img;
-    console.log(imgName)
-    const card = document.createElement('div');
-    // g.className='tclose'; g.v=0;
-    card.setAttribute('class', 'col-2');
-
-    const img = document.createElement('img');
-    img.style.width = '100px';
-    img.style.height = '200px';
-    img.src = './JPEG/' + imgName;
-    // card.innerText = i;
-
-    card.appendChild(img);
-    console.log(dealerBoard.childNodes)
-    const faceDownCard = document.getElementById('face-down-card');
-    dealerBoard.replaceChild(card, faceDownCard);
-    // dealerBoard.prepend(card);
+    dealCard(true, true);
 }
 
 function showSums() {
     const card = document.createElement('div');
     card.setAttribute('class', 'col-2');
-    card.innerText = sums.toString();
+    card.innerText = playerSums.toString();
     card.id = 'sums';
     playerBoard.append(card);
 }
 var playerHas21 = false;
-function checkBust() {
+function checkBust(isDealer) {
     let bust = true;
-    for(let i = 0; i < sums.length; i++) {
-        if(sums[i] <= 21) bust = false;
-        if(sums[i] === 21) playerHas21 = true;
+    const sums = isDealer ? dealerSums : playerSums;
+    for (let i = 0; i < sums.length; i++) {
+        if (sums[i] <= 21) bust = false;
+        if (sums[i] === 21) playerHas21 = true;
     }
     return bust;
 }
@@ -198,19 +129,49 @@ function resetBoard() {
     dealerBoard.innerHTML = '';
 }
 
-// resetBoard();
+function stay() {
+    hideHitStay();
+    replaceFaceDownCard();
+    setTimeout(caclulateDealersHand, 1000);
+}
 
-// addFirstSum()
-// while (sums.filter((each) => each < 21).length > 0) {
-//     setTimeout(() => console.log(500), 500)
-// }
+let dealerStay = false;
+let dealerBusted = true;
 
-// hideHitStay();
+function caclulateDealersHand() {
+    dealerBusted = true;
+    for (let i = 0; i < dealerSums.length; i++) {
+        if (dealerSums[i] <= 21) dealerBusted = false;
+        if (dealerSums[i] >= 17 && dealerSums[i] <= 21) dealerStay = true;
+    }
 
-// function addFirstSum() {
+    if (dealerBusted) { alert('Dealer busted, player wins!'); reset() }
 
-// }
 
-setTimeout(replaceFaceDownCard, 3000)
-// setTimeout(hideHitStay, 2000)
-// setTimeout(showHitStay, 4000);
+    if (dealerStay) {
+        const a = bestSum(playerSums);
+        const b = bestSum(dealerSums);
+
+        if (a < b) {
+            alert('Dealer Wins!'); reset()
+        } else if (a > b) {
+            alert('Player Wins!'); reset()
+        } else {
+            alert('Push!'); reset()
+        }
+    } else if (!dealerBusted) {
+        dealCard(true);
+        setTimeout(caclulateDealersHand, 1000);
+    }
+}
+
+function bestSum(sums) {
+    sums = sums.filter((each) => each <= 21);
+    sums.sort();
+    sums.reverse();
+    return sums[0];
+}
+
+function reset() {
+    window.location.reload();
+}
