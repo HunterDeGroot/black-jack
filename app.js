@@ -5,6 +5,22 @@ const board = document.getElementById('board');
 let playerSums = [];
 let dealerSums = [];
 
+let ds = document.getElementById('dealerscore');
+let ps = document.getElementById('playerscore');
+let s = document.getElementById('pecentscore');
+
+const dealerScore = Number.parseInt(localStorage.getItem('dealerscore') || 0);
+const playerScore = Number.parseInt(localStorage.getItem('playerscore') || 0);
+console.log(playerScore / (dealerScore + playerScore))
+ds.innerText = 'Dealer: ' + dealerScore;
+ps.innerText = 'Player: ' + playerScore;
+
+const percentScore = playerScore / (dealerScore + playerScore);
+s.innerText = (percentScore * 100).toPrecision(4) + '%';
+s.style.width = '55px'
+s.style.backgroundColor = percentScore < .5 ? 'red' : 'green'
+
+
 function dealCard(isDealer, replacesFaceDown = false) {
     const c = deck.pop();
 
@@ -69,11 +85,23 @@ dealCard(true);
 
 let stayed = false;
 
+function playerScored() {
+    if (!localStorage.getItem('playerscore')) localStorage.setItem("playerscore", 0);
+    localStorage.setItem("playerscore", Number.parseInt(localStorage.getItem('playerscore')) + 1);
+}
+
+function dealerScored() {
+    if (!localStorage.getItem('dealerscore')) localStorage.setItem("dealerscore", 0);
+    localStorage.setItem("dealerscore", Number.parseInt(localStorage.getItem('dealerscore')) + 1);
+}
+
 function hit() {
     dealCard(false);
     const bust = checkBust()
     if (playerHas21) { hideHitStay(); caclulateDealersHand(); }
-    if (bust) setTimeout(function () { alert('Player Busted: Dealer Wins'); reset() }, 1000);
+    if (bust) setTimeout(function () {
+        alert('Player Busted: Dealer Wins'); dealerScored(); reset();
+    }, 1000);
 }
 
 function addFaceDownCard() {
@@ -145,7 +173,7 @@ function caclulateDealersHand() {
         if (dealerSums[i] >= 17 && dealerSums[i] <= 21) dealerStay = true;
     }
 
-    if (dealerBusted) { alert('Dealer busted, player wins!'); reset() }
+    if (dealerBusted) { alert('Dealer busted, player wins!'); playerScored(); reset() }
 
 
     if (dealerStay) {
@@ -153,9 +181,9 @@ function caclulateDealersHand() {
         const b = bestSum(dealerSums);
 
         if (a < b) {
-            alert('Dealer Wins!'); reset()
+            alert('Dealer Wins!'); dealerScored(); reset()
         } else if (a > b) {
-            alert('Player Wins!'); reset()
+            alert('Player Wins!'); playerScored(); reset()
         } else {
             alert('Push!'); reset()
         }
